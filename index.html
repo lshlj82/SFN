@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scale-Free Networks: An Interactive Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDF2F5; --sheet:#F9FBFC; --ink:#1B2A3A; --muted:#566676; --grid:#D2DDE5; --grid-minor:#E3EAF0;
+  --poisson:#2F8A4C; --power:#6A3D9E; --hub:#D21F3C; --edge:rgba(27,42,58,.22); --focus:#1F6FB2;
+  --display:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1A24; --sheet:#152330; --ink:#E2E9EF; --muted:#94A4B3; --grid:#2A3B4A; --grid-minor:#1E2D3A;
+    --poisson:#5FC07B; --power:#B591E6; --hub:#FF5C6C; --edge:rgba(226,233,239,.2); --focus:#7DB8EA; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1A24; --sheet:#152330; --ink:#E2E9EF; --muted:#94A4B3; --grid:#2A3B4A; --grid-minor:#1E2D3A;
+  --poisson:#5FC07B; --power:#B591E6; --hub:#FF5C6C; --edge:rgba(226,233,239,.2); --focus:#7DB8EA; color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{
+  margin:0; background:var(--paper); color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.6;
+  background-image:
+    linear-gradient(var(--grid-minor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
+  background-size:24px 24px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1120px; margin:0 auto; padding:0 20px}
+h1,h2,h3{font-family:var(--display); font-weight:600; line-height:1.15; margin:0; letter-spacing:-.01em}
+h1{font-size:clamp(42px,7.5vw,80px); letter-spacing:-.02em}
+.credit{font-size:14px; color:var(--muted); margin-top:10px}
+h2{font-size:clamp(28px,4.2vw,40px); margin-bottom:.4em}
+h3{font-size:21px; margin-bottom:.35em}
+p{margin:0 0 1em; max-width:68ch}
+.lede{font-size:18px; color:var(--muted); max-width:60ch}
+header{padding:56px 0 24px}
+section{padding:56px 0 8px}
+.sheet{background:var(--sheet); border:1px solid var(--grid); border-radius:6px; padding:18px}
+.two{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+@media (max-width:780px){ .two{grid-template-columns:1fr} }
+.panel-title{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:4px}
+.panel-title h3{margin:0}
+.swatch{display:inline-block; width:12px; height:12px; border-radius:50%; vertical-align:-1px}
+.note{font-size:14px; color:var(--muted); margin:0 0 10px}
+canvas{display:block; width:100%; max-width:100%}
+.netcv{aspect-ratio:1/1; background:transparent; cursor:crosshair; touch-action:none}
+.chart{aspect-ratio:4/3}
+.chart.wide{aspect-ratio:16/7}
+@media (max-width:780px){ .chart.wide{aspect-ratio:4/3} }
+.stats{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:8px; font-size:13px; color:var(--muted)}
+.stats b{display:block; font-size:20px; color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums}
+.controls{display:flex; flex-wrap:wrap; gap:18px 26px; align-items:end; margin:18px 0}
+.ctl{display:flex; flex-direction:column; gap:4px; font-size:14px; color:var(--muted); min-width:170px}
+.ctl output{color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums}
+input[type=range]{width:100%; accent-color:var(--power)}
+select{font:inherit; font-size:15px; color:var(--ink); background:var(--sheet); border:1px solid var(--grid); border-radius:4px; padding:5px 8px}
+.check{flex-direction:row; align-items:center; gap:8px; min-width:0; color:var(--ink)}
+button{
+  font-family:var(--body); font-size:15px; font-weight:600; color:var(--sheet); background:var(--ink);
+  border:0; border-radius:4px; padding:9px 18px; cursor:pointer;
+}
+button:hover{background:var(--power)}
+button:focus-visible, input:focus-visible, select:focus-visible{outline:3px solid var(--focus); outline-offset:2px}
+.legend{display:flex; flex-wrap:wrap; gap:6px 18px; font-size:14px; color:var(--muted); margin:6px 0 0}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.line-key{display:inline-block; width:22px; height:0; border-top:3px solid currentColor}
+.line-key.dash{border-top-style:dashed}
+.callout{font-family:var(--display); font-size:21px; line-height:1.4; margin:14px 0 4px; max-width:40ch}
+.callout .num{color:var(--hub); font-weight:700}
+.chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px}
+.chip{border:1.5px solid var(--grid); border-radius:999px; padding:3px 12px; font-size:14px; font-variant-numeric:tabular-nums}
+.chip.inf{border-color:var(--hub); color:var(--hub)}
+.chip.fin{border-color:var(--poisson); color:var(--poisson)}
+.formula{font-family:"Times New Roman",Times,serif; font-style:italic; font-size:19px; white-space:nowrap}
+.tip{position:fixed; pointer-events:none; background:var(--ink); color:var(--sheet); font-size:13px; padding:3px 8px; border-radius:4px; opacity:0; transition:opacity .1s; z-index:5}
+footer{padding:48px 0 64px; font-size:14px; color:var(--muted)}
+footer p{max-width:80ch}
+.status{font-size:13px; color:var(--muted); min-height:1.4em}
+@media (prefers-reduced-motion: reduce){ .tip{transition:none} }
+</style>
+</head>
+<body>
+<div class="tip" id="tip"></div>
+
+<header class="wrap">
+  <h1>Scale-free networks</h1>
+  <p class="credit">Created by Claude Opus 5.5, based on the lecture slides by Sang Hoon Lee.</p>
+  <p class="lede" style="margin-top:18px">Two networks with the same number of nodes and the same average degree. One is wired at random; the other grows by preferential attachment. Look for the hubs.</p>
+
+  <div class="controls">
+    <label class="ctl">Nodes <output id="nOut">220</output>
+      <input type="range" id="nIn" min="60" max="400" step="10" value="220"></label>
+    <label class="ctl">Average degree ⟨k⟩ <output id="mOut">4</output>
+      <input type="range" id="mIn" min="1" max="4" step="1" value="2"></label>
+    <button id="regen" type="button">Regenerate</button>
+  </div>
+
+  <div class="two">
+    <div class="sheet">
+      <div class="panel-title"><span class="swatch" style="background:var(--poisson)"></span><h3>Random network</h3></div>
+      <p class="note">Erdős–Rényi: every link goes between two nodes chosen uniformly at random. Degrees follow a Poisson distribution.</p>
+      <canvas id="netER" class="netcv" aria-label="Random network drawing"></canvas>
+      <div class="stats" id="statER"></div>
+    </div>
+    <div class="sheet">
+      <div class="panel-title"><span class="swatch" style="background:var(--power)"></span><h3>Scale-free network</h3></div>
+      <p class="note">Barabási–Albert: each new node links to existing nodes with probability proportional to their degree. Degrees follow a power law.</p>
+      <canvas id="netBA" class="netcv" aria-label="Scale-free network drawing"></canvas>
+      <div class="stats" id="statBA"></div>
+    </div>
+  </div>
+  <div class="legend" style="margin-top:12px">
+    <span>Dot size grows with degree.</span>
+    <span><span class="swatch" style="background:var(--hub)"></span>Hub: at least 3 × ⟨k⟩ links</span>
+    <span>Hover or tap a node to see its neighbors.</span>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section id="dist">
+  <h2>Poisson vs power law</h2>
+  <p>The same comparison with many more nodes. On linear axes the power law is a steep L with a long tail. On log–log axes it becomes a straight line, because taking logs of <span class="formula">P(k) = c k<sup>−γ</sup></span> gives <span class="formula">log P(k) = log c − γ log k</span>: a line with slope −γ, the degree exponent.</p>
+  <div class="controls">
+    <label class="ctl">Nodes
+      <select id="distN"><option value="2000">2,000</option><option value="10000" selected>10,000</option><option value="50000">50,000</option></select></label>
+    <label class="ctl check"><input type="checkbox" id="logbin" checked> Log-binned points</label>
+    <div class="ctl">Average degree follows the slider above</div>
+  </div>
+  <div class="two">
+    <div class="sheet">
+      <h3>Linear axes</h3>
+      <canvas id="distLin" class="chart" aria-label="Degree distribution, linear axes"></canvas>
+    </div>
+    <div class="sheet">
+      <h3>Log–log axes</h3>
+      <canvas id="distLog" class="chart" aria-label="Degree distribution, log-log axes"></canvas>
+    </div>
+  </div>
+  <div class="legend">
+    <span style="color:var(--poisson)"><span class="swatch" style="background:var(--poisson)"></span>Random network</span>
+    <span style="color:var(--poisson)"><span class="line-key dash"></span>Poisson with the same ⟨k⟩</span>
+    <span style="color:var(--power)"><span class="swatch" style="background:var(--power)"></span>Scale-free network</span>
+    <span style="color:var(--hub)"><span class="line-key"></span>Fitted power law</span>
+  </div>
+  <p class="callout" id="fitText"></p>
+</section>
+
+<section id="scale">
+  <h2>What “scale-free” means</h2>
+  <p>Compare the number of nodes with <i>bk</i> links to the number with <i>k</i> links. For a power law the ratio is always <span class="formula">b<sup>−γ</sup></span>, whatever <i>k</i> you start from: it depends only on how many times larger you look. No degree is special, so there is no characteristic scale. For a Poisson distribution the ratio depends heavily on <i>k</i> and collapses once <i>k</i> passes ⟨k⟩.</p>
+  <div class="controls">
+    <label class="ctl">Degree exponent γ <output id="gOut">2.5</output>
+      <input type="range" id="gIn" min="1.5" max="4" step="0.1" value="2.5"></label>
+    <label class="ctl">Compare k with
+      <select id="bIn"><option value="2" selected>2k</option><option value="3">3k</option><option value="10">10k</option></select></label>
+    <label class="ctl">Starting degree k <output id="kOut">5</output>
+      <input type="range" id="kIn" min="0" max="3" step="0.01" value="0.699"></label>
+  </div>
+  <div class="sheet">
+    <canvas id="ratioCv" class="chart wide" aria-label="Ratio P(bk)/P(k) against k"></canvas>
+    <div class="legend">
+      <span style="color:var(--power)"><span class="line-key"></span>Power law P(k) ∝ k<sup>−γ</sup></span>
+      <span style="color:var(--poisson)"><span class="line-key"></span>Poisson, ⟨k⟩ = 10</span>
+      <span style="color:var(--hub)"><span class="swatch" style="background:var(--hub)"></span>Your starting k</span>
+    </div>
+  </div>
+  <p class="callout" id="ratioText"></p>
+  <p style="margin-top:18px">The same exponent decides which averages exist. With a power-law tail, the n-th moment <span class="formula">⟨k<sup>n</sup>⟩ ∝ ∫ k<sup>n−γ</sup> dk</span> diverges when γ ≤ n + 1. Most real networks have 2 &lt; γ &lt; 3: a finite mean, but an infinite variance.</p>
+  <div class="chips" id="moments"></div>
+</section>
+
+<section id="noscale">
+  <h2>No typical degree</h2>
+  <p>For a random network, a node you pick at random has roughly k = ⟨k⟩ ± √⟨k⟩, so ⟨k⟩ is a fair summary. For a scale-free network with γ &lt; 3, ⟨k⟩ stays fixed as the network grows but the spread σ<sub>k</sub> keeps growing, and so does the largest hub. Knowing ⟨k⟩ tells you little about the node you will pick.</p>
+  <div class="controls">
+    <button id="pick" type="button">Pick 100 random nodes</button>
+    <span class="status" id="pickText"></span>
+  </div>
+  <div class="sheet">
+    <canvas id="pickCv" class="chart wide" style="aspect-ratio:16/5" aria-label="Degrees of randomly picked nodes"></canvas>
+  </div>
+  <div class="two" style="margin-top:18px">
+    <div class="sheet">
+      <h3>Spread σ<sub>k</sub> as N grows</h3>
+      <canvas id="sigCv" class="chart" aria-label="Standard deviation of degree versus network size"></canvas>
+    </div>
+    <div class="sheet">
+      <h3>Largest hub as N grows</h3>
+      <canvas id="kmaxCv" class="chart" aria-label="Maximum degree versus network size"></canvas>
+    </div>
+  </div>
+  <div class="legend">
+    <span style="color:var(--poisson)"><span class="line-key"></span>Random network</span>
+    <span style="color:var(--power)"><span class="line-key"></span>Scale-free network</span>
+    <span style="color:var(--muted)"><span class="line-key dash"></span>√⟨k⟩ (left) and √N growth (right)</span>
+  </div>
+  <p class="status" id="growStatus"></p>
+</section>
+
+<section id="practice">
+  <h2>Why it matters in practice</h2>
+  <div class="two">
+    <div>
+      <h3>Robust to accidents, fragile to attacks</h3>
+      <p>Remove nodes and ask what share of the surviving nodes can still reach each other. A random network falls apart once about 1 − 1/⟨k⟩ of its nodes fail. A scale-free network holds on longer and fades out gradually instead of collapsing at a sharp threshold, because almost every node a random failure hits is small. In the limit of very large networks it never breaks apart at all. Remove the hubs first, though, and it shatters faster than the random network.</p>
+      <div class="sheet">
+        <canvas id="robCv" class="chart" aria-label="Largest component size versus fraction of nodes removed"></canvas>
+        <div class="legend">
+          <span style="color:var(--poisson)"><span class="line-key"></span>Random, failures</span>
+          <span style="color:var(--poisson)"><span class="line-key dash"></span>Random, hub attack</span>
+          <span style="color:var(--power)"><span class="line-key"></span>Scale-free, failures</span>
+          <span style="color:var(--power)"><span class="line-key dash"></span>Scale-free, hub attack</span>
+        </div>
+      </div>
+      <div class="controls"><button id="robRun" type="button">Run again</button><span class="status">10,000 nodes, ⟨k⟩ from the slider at the top</span></div>
+    </div>
+    <div>
+      <h3>An even smaller world</h3>
+      <p>Hubs act as shortcuts. Paths between two nodes tend to pass through them, so the average distance grows more slowly with network size than in a random network with the same ⟨k⟩.</p>
+      <div class="sheet">
+        <canvas id="pathCv" class="chart" aria-label="Average distance versus network size"></canvas>
+        <div class="legend">
+          <span style="color:var(--poisson)"><span class="line-key"></span>Random network</span>
+          <span style="color:var(--power)"><span class="line-key"></span>Scale-free network</span>
+        </div>
+      </div>
+      <div class="controls"><button id="pathRun" type="button">Run again</button><span class="status" id="pathStatus"></span></div>
+    </div>
+  </div>
+  <h3 style="margin-top:28px">Where power laws show up</h3>
+  <p>Heavy-tailed degree distributions appear across very different systems: links between web pages, routers on the internet, protein interactions, email, citations between papers, metabolic reactions. This shared shape is what network scientists call universality. It is also why studying one kind of network often teaches you something about the others.</p>
+</section>
+</main>
+
+<footer class="wrap">
+  <p>Created by Claude Opus 5.5, based on the lecture slides by Sang Hoon Lee.</p>
+  <p>Every network on this page is generated in your browser. Random networks use the G(N, M) model with M = N⟨k⟩/2 links. Scale-free networks use Barabási–Albert preferential attachment, which gives γ = 3 for large N. Moments in the “scale-free” section use an ideal continuous power law.</p>
+</footer>
+
+<script>
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const rnd = n => (Math.random() * n) | 0;
+
+/* ---------- graph generation ---------- */
+function build(N, edges){
+  const deg = new Int32Array(N);
+  for (let i = 0; i < edges.length; i++) deg[edges[i]]++;
+  const off = new Int32Array(N + 1);
+  for (let i = 0; i < N; i++) off[i + 1] = off[i] + deg[i];
+  const fill = off.slice(0, N), nbr = new Int32Array(edges.length);
+  for (let i = 0; i < edges.length; i += 2){
+    const a = edges[i], b = edges[i + 1];
+    nbr[fill[a]++] = b; nbr[fill[b]++] = a;
+  }
+  return { N, deg, off, nbr, edges: Int32Array.from(edges) };
+}
+function genER(N, kavg){
+  const M = Math.min(Math.round(N * kavg / 2), N * (N - 1) / 2);
+  const seen = new Set(), edges = [];
+  while (edges.length < 2 * M){
+    let a = rnd(N), b = rnd(N);
+    if (a === b) continue;
+    if (a > b){ const t = a; a = b; b = t; }
+    const key = a * N + b;
+    if (seen.has(key)) continue;
+    seen.add(key); edges.push(a, b);
+  }
+  return build(N, edges);
+}
+function genBA(N, m){
+  const edges = [], ends = [], m0 = m + 1;
+  for (let i = 0; i < m0; i++) for (let j = 0; j < i; j++){ edges.push(i, j); ends.push(i, j); }
+  const chosen = new Set();
+  for (let v = m0; v < N; v++){
+    chosen.clear();
+    while (chosen.size < m) chosen.add(ends[rnd(ends.length)]);
+    for (const t of chosen){ edges.push(v, t); ends.push(v, t); }
+  }
+  return build(N, edges);
+}
+function stats(g){
+  let s = 0, s2 = 0, mx = 0;
+  for (let i = 0; i < g.N; i++){ const k = g.deg[i]; s += k; s2 += k * k; if (k > mx) mx = k; }
+  const mean = s / g.N;
+  return { mean, sd: Math.sqrt(Math.max(0, s2 / g.N - mean * mean)), max: mx };
+}
+
+/* ---------- theme helpers ---------- */
+let C = {};
+function readColors(){
+  const cs = getComputedStyle(document.documentElement);
+  ["ink","muted","grid","grid-minor","poisson","power","hub","edge","sheet"].forEach(k => C[k] = cs.getPropertyValue("--" + k).trim());
+}
+readColors();
+function setup(cv){
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)){ cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  return { ctx, w, h };
+}
+
+/* ---------- charting ---------- */
+const SUP = { "-":"⁻", "0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹" };
+function fmtLog(v){
+  const e = Math.round(Math.log10(v));
+  if (Math.abs(Math.log10(v) - e) > 1e-9) return String(+v.toPrecision(2));
+  if (e >= 0 && e <= 4) return Math.pow(10, e).toLocaleString("en-US");
+  return "10" + String(e).split("").map(c => SUP[c]).join("");
+}
+function niceStep(range, n){
+  const raw = range / n, p = Math.pow(10, Math.floor(Math.log10(raw))), r = raw / p;
+  return (r < 1.5 ? 1 : r < 3 ? 2 : r < 7 ? 5 : 10) * p;
+}
+function makeAxis(a, p0, p1){
+  const tf = a.log ? Math.log10 : v => v;
+  const t0 = tf(a.min), t1 = tf(a.max);
+  const f = v => p0 + (tf(v) - t0) / (t1 - t0) * (p1 - p0);
+  const major = [], minor = [];
+  if (a.log){
+    for (let e = Math.floor(t0); e <= Math.ceil(t1); e++){
+      const base = Math.pow(10, e);
+      if (base >= a.min * 0.999 && base <= a.max * 1.001) major.push(base);
+      if (t1 - t0 <= 6) for (let m = 2; m <= 9; m++){ const v = m * base; if (v > a.min && v < a.max) minor.push(v); }
+    }
+    const step = Math.ceil(major.length / 7);
+    f.major = major.filter((_, i) => i % step === 0);
+    f.fmt = fmtLog;
+  } else {
+    const st = niceStep(a.max - a.min, a.n || 5);
+    for (let v = Math.ceil(a.min / st) * st; v <= a.max + 1e-9; v += st) major.push(+v.toPrecision(10));
+    f.major = major; f.fmt = a.fmt || (v => v.toLocaleString("en-US"));
+  }
+  f.minor = minor; f.min = a.min; f.max = a.max;
+  return f;
+}
+function plot(cv, o){
+  const { ctx, w, h } = setup(cv);
+  const pad = { l: 56, r: 24, t: 12, b: o.x.label ? 46 : 28 };
+  const X = makeAxis(o.x, pad.l, w - pad.r), Y = makeAxis(o.y, h - pad.b, pad.t);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = C["grid-minor"];
+  ctx.beginPath();
+  X.minor.forEach(v => { const x = Math.round(X(v)) + .5; ctx.moveTo(x, pad.t); ctx.lineTo(x, h - pad.b); });
+  Y.minor.forEach(v => { const y = Math.round(Y(v)) + .5; ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); });
+  ctx.stroke();
+  ctx.strokeStyle = C.grid;
+  ctx.beginPath();
+  X.major.forEach(v => { const x = Math.round(X(v)) + .5; ctx.moveTo(x, pad.t); ctx.lineTo(x, h - pad.b); });
+  Y.major.forEach(v => { const y = Math.round(Y(v)) + .5; ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); });
+  ctx.stroke();
+  ctx.fillStyle = C.muted; ctx.font = "12px " + getComputedStyle(document.body).fontFamily;
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  if (!o.x.hideTicks) X.major.forEach(v => ctx.fillText(X.fmt(v), X(v), h - pad.b + 6));
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  if (!o.y.hideTicks) Y.major.forEach(v => ctx.fillText(Y.fmt(v), pad.l - 6, Y(v)));
+  ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.font = "italic 14px 'Times New Roman', serif"; ctx.fillStyle = C.ink;
+  if (o.x.label) ctx.fillText(o.x.label, (pad.l + w - pad.r) / 2, h - 4);
+  if (o.y.label){ ctx.save(); ctx.translate(14, (pad.t + h - pad.b) / 2); ctx.rotate(-Math.PI / 2); ctx.textBaseline = "middle"; ctx.fillText(o.y.label, 0, 0); ctx.restore(); }
+  ctx.save();
+  ctx.beginPath(); ctx.rect(pad.l, pad.t, w - pad.l - pad.r, h - pad.t - pad.b); ctx.clip();
+  const ok = (x, y) => isFinite(x) && isFinite(y) && (!o.x.log || x > 0) && (!o.y.log || y > 0);
+  for (const s of o.series){
+    const col = C[s.color] || s.color;
+    if (s.type === "line"){
+      ctx.strokeStyle = col; ctx.lineWidth = s.width || 2.2; ctx.setLineDash(s.dash ? [6, 5] : []);
+      ctx.lineJoin = "round"; ctx.beginPath(); let pen = false;
+      for (const [x, y] of s.pts){
+        if (!ok(x, y)){ pen = false; continue; }
+        const px = X(x), py = Math.max(-1e4, Math.min(1e4, Y(y)));
+        pen ? ctx.lineTo(px, py) : ctx.moveTo(px, py); pen = true;
+      }
+      ctx.stroke(); ctx.setLineDash([]);
+    } else {
+      ctx.fillStyle = col; ctx.globalAlpha = s.alpha || 1;
+      const r = s.r || 3;
+      for (const [x, y] of s.pts){
+        if (!ok(x, y)) continue;
+        ctx.beginPath();
+        if (s.shape === "diamond"){ const px = X(x), py = Y(y); ctx.moveTo(px, py - r * 1.25); ctx.lineTo(px + r, py); ctx.lineTo(px, py + r * 1.25); ctx.lineTo(px - r, py); }
+        else ctx.arc(X(x), Y(y), r, 0, 7);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+  ctx.restore();
+  if (o.after) o.after(ctx, X, Y, w, h, pad);
+}
+
+/* ---------- hero: force layouts ---------- */
+const tip = $("tip");
+class NetView{
+  constructor(cv, statEl, color){ this.cv = cv; this.statEl = statEl; this.color = color; this.hover = -1; this.raf = 0;
+    const pick = e => {
+      const r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+      let best = -1, bd = 196;
+      if (this.sx) for (let i = 0; i < this.g.N; i++){
+        const dx = this.sx[i] - mx, dy = this.sy[i] - my, d = dx * dx + dy * dy;
+        if (d < bd){ bd = d; best = i; }
+      }
+      if (best !== this.hover){ this.hover = best; this.draw(); }
+      if (best >= 0){ tip.textContent = "k = " + this.g.deg[best]; tip.style.left = (e.clientX + 12) + "px"; tip.style.top = (e.clientY - 28) + "px"; tip.style.opacity = 1; }
+      else tip.style.opacity = 0;
+    };
+    cv.addEventListener("pointermove", pick);
+    cv.addEventListener("pointerdown", pick);
+    cv.addEventListener("pointerleave", () => { this.hover = -1; tip.style.opacity = 0; this.draw(); });
+  }
+  set(g){
+    cancelAnimationFrame(this.raf);
+    this.g = g; this.hover = -1;
+    const N = g.N; this.x = new Float32Array(N); this.y = new Float32Array(N); this.vx = new Float32Array(N); this.vy = new Float32Array(N);
+    for (let i = 0; i < N; i++){ const a = Math.random() * 6.283, r = 60 * Math.sqrt(Math.random()); this.x[i] = r * Math.cos(a); this.y[i] = r * Math.sin(a); }
+    this.alpha = 1;
+    const s = stats(g); this.mean = s.mean;
+    let hubs = 0; for (let i = 0; i < N; i++) if (g.deg[i] >= 3 * s.mean) hubs++;
+    this.statEl.innerHTML = `<div><b>${s.mean.toFixed(2)}</b>⟨k⟩</div><div><b>${s.sd.toFixed(2)}</b>σ<sub>k</sub></div><div><b>${s.max}</b>largest k</div><div><b>${hubs}</b>hubs</div>`;
+    if (reduceMotion){ while (this.alpha > 0.02) this.tick(); this.draw(); }
+    else this.loop();
+  }
+  loop(){
+    for (let i = 0; i < 2; i++) this.tick();
+    this.draw();
+    if (this.alpha > 0.02) this.raf = requestAnimationFrame(() => this.loop());
+  }
+  tick(){
+    const { g, x, y, vx, vy } = this, N = g.N, a = this.alpha;
+    const rep = 160, L = 14;
+    for (let i = 0; i < N; i++){
+      for (let j = i + 1; j < N; j++){
+        let dx = x[i] - x[j], dy = y[i] - y[j], d2 = dx * dx + dy * dy + 0.01;
+        if (d2 > 6400) continue;
+        const f = rep / d2 * a;
+        dx *= f / Math.sqrt(d2); dy *= f / Math.sqrt(d2);
+        vx[i] += dx; vy[i] += dy; vx[j] -= dx; vy[j] -= dy;
+      }
+    }
+    const E = g.edges;
+    for (let e = 0; e < E.length; e += 2){
+      const i = E[e], j = E[e + 1];
+      const dx = x[j] - x[i], dy = y[j] - y[i], d = Math.sqrt(dx * dx + dy * dy) + 0.01;
+      const k = (d - L) / d * 0.06 * a / Math.sqrt(Math.min(g.deg[i], g.deg[j]));
+      vx[i] += dx * k; vy[i] += dy * k; vx[j] -= dx * k; vy[j] -= dy * k;
+    }
+    for (let i = 0; i < N; i++){
+      vx[i] -= x[i] * 0.004 * a; vy[i] -= y[i] * 0.004 * a;
+      vx[i] *= 0.6; vy[i] *= 0.6;
+      x[i] += vx[i]; y[i] += vy[i];
+    }
+    this.alpha *= 0.988;
+  }
+  draw(){
+    if (!this.g) return;
+    const { ctx, w, h } = setup(this.cv);
+    const { g, x, y } = this, N = g.N;
+    // fit the view to the 1st–99th percentile so stray isolated nodes don't shrink the drawing
+    const xs = Float32Array.from(x).sort(), ys = Float32Array.from(y).sort();
+    const lo = Math.floor(N * 0.01), hi = Math.min(N - 1, Math.ceil(N * 0.99));
+    const x0 = xs[lo], x1 = xs[hi], y0 = ys[lo], y1 = ys[hi];
+    const m = 22, sc = Math.min((w - 2 * m) / (x1 - x0 || 1), (h - 2 * m) / (y1 - y0 || 1));
+    const ox = (w - (x1 - x0) * sc) / 2, oy = (h - (y1 - y0) * sc) / 2;
+    if (!this.sx || this.sx.length !== N){ this.sx = new Float32Array(N); this.sy = new Float32Array(N); }
+    for (let i = 0; i < N; i++){
+      this.sx[i] = Math.max(6, Math.min(w - 6, ox + (x[i] - x0) * sc));
+      this.sy[i] = Math.max(6, Math.min(h - 6, oy + (y[i] - y0) * sc));
+    }
+    const sx = this.sx, sy = this.sy, hv = this.hover, E = g.edges;
+    ctx.lineWidth = 1; ctx.strokeStyle = C.edge; ctx.beginPath();
+    for (let e = 0; e < E.length; e += 2){ ctx.moveTo(sx[E[e]], sy[E[e]]); ctx.lineTo(sx[E[e + 1]], sy[E[e + 1]]); }
+    ctx.stroke();
+    const nb = new Set();
+    if (hv >= 0){
+      ctx.strokeStyle = C.ink; ctx.lineWidth = 1.6; ctx.beginPath();
+      for (let p = g.off[hv]; p < g.off[hv + 1]; p++){ const u = g.nbr[p]; nb.add(u); ctx.moveTo(sx[hv], sy[hv]); ctx.lineTo(sx[u], sy[u]); }
+      ctx.stroke();
+    }
+    const base = Math.max(0.7, Math.min(1.4, w / 420));
+    for (let i = 0; i < N; i++){
+      const k = g.deg[i], r = (1.4 + 0.95 * Math.pow(k, 0.72)) * base;
+      ctx.beginPath(); ctx.arc(sx[i], sy[i], r, 0, 7);
+      ctx.fillStyle = k >= 3 * this.mean ? C.hub : C[this.color];
+      ctx.globalAlpha = hv >= 0 && i !== hv && !nb.has(i) ? 0.3 : 1;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      if (i === hv){ ctx.lineWidth = 2; ctx.strokeStyle = C.ink; ctx.stroke(); }
+    }
+  }
+}
+const viewER = new NetView($("netER"), $("statER"), "poisson");
+const viewBA = new NetView($("netBA"), $("statBA"), "power");
+const mVal = () => +$("mIn").value;
+
+function regenHero(){
+  const N = +$("nIn").value, m = mVal();
+  const ba = genBA(N, m);
+  viewBA.set(ba);
+  viewER.set(genER(N, stats(ba).mean));
+}
+$("nIn").addEventListener("input", e => { $("nOut").textContent = e.target.value; });
+$("nIn").addEventListener("change", regenHero);
+$("mIn").addEventListener("input", e => { $("mOut").textContent = 2 * e.target.value; });
+$("mIn").addEventListener("change", () => { regenHero(); regenDist(); runGrowth(); runRobust(); runPaths(); });
+$("regen").addEventListener("click", regenHero);
+
+/* ---------- degree distributions ---------- */
+let dist = null;
+function lnFact(n){ let s = 0; for (let i = 2; i <= n; i++) s += Math.log(i); return s; }
+function poisson(k, lam){ return Math.exp(-lam + k * Math.log(lam) - lnFact(k)); }
+function hist(g){ const h = new Map(); for (let i = 0; i < g.N; i++) h.set(g.deg[i], (h.get(g.deg[i]) || 0) + 1); return [...h.entries()].sort((a, b) => a[0] - b[0]).map(([k, c]) => [k, c / g.N]); }
+function logBin(g){
+  const kmin = 1, factor = 1.5, bins = [];
+  let lo = kmin;
+  const s = stats(g);
+  while (lo <= s.max){ const hi = Math.max(lo + 1, Math.ceil(lo * factor)); bins.push([lo, hi]); lo = hi; }
+  const cnt = new Float64Array(bins.length);
+  for (let i = 0; i < g.N; i++){ const k = g.deg[i]; for (let b = 0; b < bins.length; b++) if (k >= bins[b][0] && k < bins[b][1]){ cnt[b]++; break; } }
+  const out = [];
+  bins.forEach(([lo, hi], b) => { if (cnt[b] > 0) out.push([Math.sqrt(lo * (hi - 1)) || lo, cnt[b] / g.N / (hi - lo)]); });
+  return out;
+}
+function fitGamma(g, kmin){
+  let n = 0, s = 0;
+  for (let i = 0; i < g.N; i++){ const k = g.deg[i]; if (k >= kmin){ n++; s += Math.log(k / (kmin - 0.5)); } }
+  const gam = 1 + n / s;
+  return { gam, C: (n / g.N) * (gam - 1) * Math.pow(kmin - 0.5, gam - 1), kmin };
+}
+function regenDist(){
+  const N = +$("distN").value, m = mVal();
+  const ba = genBA(N, m), er = genER(N, stats(ba).mean);
+  const fit = fitGamma(ba, Math.max(2 * m, 3));
+  dist = { ba, er, hb: hist(ba), he: hist(er), lb: logBin(ba), le: logBin(er), fit, mean: stats(ba).mean, sb: stats(ba), se: stats(er) };
+  drawDist();
+}
+function drawDist(){
+  if (!dist) return;
+  const { hb, he, fit, mean, sb } = dist, useBin = $("logbin").checked;
+  const kmaxLin = Math.max(30, Math.ceil(mean * 5));
+  const pois = []; for (let k = 0; k <= sb.max * 1.2; k++) pois.push([k, poisson(k, mean)]);
+  const powl = []; for (let k = fit.kmin; k <= sb.max * 1.2; k *= 1.1) powl.push([k, fit.C * Math.pow(k, -fit.gam)]);
+  const ymaxLin = Math.max(...hb.map(p => p[1]), ...he.map(p => p[1])) * 1.1;
+  plot($("distLin"), {
+    x: { min: 0, max: kmaxLin, label: "k" }, y: { min: 0, max: ymaxLin, label: "P(k)", fmt: v => v.toFixed(2) },
+    series: [
+      { type: "line", pts: pois.filter(p => p[0] <= kmaxLin), color: "poisson", dash: true, width: 1.6 },
+      { type: "dots", pts: he, color: "poisson", r: 3.6, shape: "diamond" },
+      { type: "dots", pts: hb, color: "power", r: 3.2 }
+    ]
+  });
+  const shown = (useBin ? dist.lb.concat(dist.le) : hb).map(p => p[1]).filter(v => v > 0);
+  const ymin = Math.pow(10, Math.floor(Math.log10(Math.min(...shown) / 2)));
+  plot($("distLog"), {
+    x: { log: true, min: 1, max: Math.pow(10, Math.ceil(Math.log10(sb.max * 1.1))), label: "k" }, y: { log: true, min: ymin, max: 1, label: "P(k)" },
+    series: [
+      { type: "line", pts: pois.filter(p => p[0] >= 1), color: "poisson", dash: true, width: 1.6 },
+      { type: "line", pts: powl, color: "hub", width: 1.8 },
+      { type: "dots", pts: useBin ? dist.le : he.filter(p => p[0] >= 1), color: "poisson", r: useBin ? 4 : 3, shape: "diamond" },
+      { type: "dots", pts: useBin ? dist.lb : hb, color: "power", r: useBin ? 4 : 2.4, alpha: useBin ? 1 : .8 }
+    ]
+  });
+  $("fitText").innerHTML = `Fitted degree exponent γ ≈ <span class="num">${fit.gam.toFixed(2)}</span>. The random network’s points fall off a cliff near k ≈ ${Math.round(mean * 2.5)}; the scale-free network keeps going for about ${Math.log10(sb.max / Math.max(1, mVal())).toFixed(1)} decades, up to k = ${sb.max}.`;
+}
+$("distN").addEventListener("change", regenDist);
+$("logbin").addEventListener("change", drawDist);
+
+/* ---------- scale transformation ---------- */
+function drawRatio(){
+  const gam = +$("gIn").value, b = +$("bIn").value, k0 = Math.pow(10, +$("kIn").value), lam = 10;
+  $("gOut").textContent = gam.toFixed(1); $("kOut").textContent = k0 < 10 ? k0.toFixed(1) : Math.round(k0);
+  const pl = [], po = [];
+  for (let lk = 0; lk <= 3.0001; lk += 0.02){
+    const k = Math.pow(10, lk);
+    pl.push([k, Math.pow(b, -gam)]);
+    // continuous Poisson via log-gamma (Stirling) to allow non-integer k
+    const lg = z => (z + 0.5) * Math.log(z + 1) - (z + 1) + 0.5 * Math.log(2 * Math.PI) + 1 / (12 * (z + 1));
+    const lp = z => -lam + z * Math.log(lam) - lg(z);
+    po.push([k, Math.exp(lp(b * k) - lp(k))]);
+  }
+  const plR = Math.pow(b, -gam);
+  plot($("ratioCv"), {
+    x: { log: true, min: 1, max: 1000, label: "k" }, y: { log: true, min: 1e-12, max: 100, label: "P(bk) / P(k)" },
+    series: [
+      { type: "line", pts: po, color: "poisson", width: 2.4 },
+      { type: "line", pts: pl, color: "power", width: 3 }
+    ],
+    after: (ctx, X, Y) => {
+      ctx.fillStyle = C.hub;
+      ctx.beginPath(); ctx.arc(X(k0), Y(plR), 6, 0, 7); ctx.fill();
+      ctx.strokeStyle = C.hub; ctx.setLineDash([3, 4]); ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(X(k0), Y(1e-12)); ctx.lineTo(X(k0), Y(100)); ctx.stroke(); ctx.setLineDash([]);
+    }
+  });
+  const kStr = k0 < 10 ? k0.toFixed(1) : String(Math.round(k0));
+  const bkStr = k0 * b < 10 ? (k0 * b).toFixed(1) : String(Math.round(k0 * b));
+  $("ratioText").innerHTML = `For every node with ${kStr} links there are <span class="num">${plR < 0.01 ? plR.toExponential(1) : plR.toFixed(3)}</span> nodes with ${bkStr} links. Move k anywhere: the power-law ratio stays at 1/${b}<sup>${gam.toFixed(1)}</sup>.`;
+  const chips = [1, 2, 3].map(n => {
+    const name = n === 1 ? "⟨k⟩" : `⟨k<sup>${n}</sup>⟩`;
+    const fin = gam > n + 1;
+    return `<span class="chip ${fin ? "fin" : "inf"}">${name} ${fin ? "finite" : "diverges"}</span>`;
+  });
+  chips.push(`<span class="chip ${gam > 3 ? "fin" : "inf"}">σ<sub>k</sub> ${gam > 3 ? "finite" : "→ ∞"}</span>`);
+  $("moments").innerHTML = chips.join("");
+}
+["gIn", "bIn", "kIn"].forEach(id => $(id).addEventListener("input", drawRatio));
+
+/* ---------- random picks ---------- */
+let picks = null;
+function doPick(){
+  if (!dist) return;
+  const take = g => Array.from({ length: 100 }, () => g.deg[rnd(g.N)]);
+  picks = { er: take(dist.er), ba: take(dist.ba) };
+  drawPick();
+  const sum = a => { const m = a.reduce((x, y) => x + y, 0) / a.length; return { min: Math.min(...a), max: Math.max(...a) }; };
+  const e = sum(picks.er), b = sum(picks.ba);
+  $("pickText").textContent = `Random: k from ${e.min} to ${e.max}. Scale-free: k from ${b.min} to ${b.max}.`;
+}
+function drawPick(){
+  if (!picks || !dist) return;
+  const kmax = Math.max(dist.sb.max, ...picks.ba);
+  const jit = a => a.map(k => [k, 0]);
+  plot($("pickCv"), {
+    x: { log: true, min: 1, max: Math.pow(10, Math.ceil(Math.log10(kmax))), label: "degree k of each picked node" }, y: { min: 0, max: 3, hideTicks: true },
+    series: [],
+    after: (ctx, X, Y) => {
+      const row = (arr, yv, col, lab) => {
+        ctx.fillStyle = C.muted; ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.font = "13px " + getComputedStyle(document.body).fontFamily;
+        ctx.fillText(lab, X(1) + 4, Y(yv) - 12);
+        ctx.fillStyle = C[col]; ctx.globalAlpha = .55;
+        arr.forEach(k => { ctx.beginPath(); ctx.arc(X(Math.max(1, k)) + (Math.random() - .5) * 3, Y(yv) + (Math.random() - .5) * 10, 5, 0, 7); ctx.fill(); });
+        ctx.globalAlpha = 1;
+      };
+      row(picks.er, 2, "poisson", `Random: ⟨k⟩ ± σ = ${dist.se.mean.toFixed(1)} ± ${dist.se.sd.toFixed(1)}`);
+      row(picks.ba, 0.85, "power", `Scale-free: ⟨k⟩ ± σ = ${dist.sb.mean.toFixed(1)} ± ${dist.sb.sd.toFixed(1)}`);
+    }
+  });
+}
+$("pick").addEventListener("click", doPick);
+
+/* ---------- growth experiment ---------- */
+let growth = null, growToken = 0;
+const pause = () => new Promise(r => setTimeout(r, 0));
+async function runGrowth(){
+  const tok = ++growToken, m = mVal(), Ns = [100, 300, 1000, 3000, 10000, 30000, 100000];
+  growth = { Ns: [], er: [], ba: [] };
+  for (const N of Ns){
+    $("growStatus").textContent = `Growing networks up to N = ${N.toLocaleString("en-US")}…`;
+    await pause(); if (tok !== growToken) return;
+    const ba = genBA(N, m), sb = stats(ba), se = stats(genER(N, sb.mean));
+    growth.Ns.push(N); growth.ba.push(sb); growth.er.push(se);
+    drawGrowth();
+  }
+  $("growStatus").textContent = "";
+}
+function drawGrowth(){
+  if (!growth || !growth.Ns.length) return;
+  const m = mVal(), mean = 2 * m;
+  const xs = { log: true, min: 100, max: 100000, label: "network size N" };
+  const pts = (arr, f) => growth.Ns.map((N, i) => [N, f(arr[i])]);
+  const sdMax = Math.max(...growth.ba.map(s => s.sd)) * 1.15;
+  plot($("sigCv"), {
+    x: xs, y: { min: 0, max: Math.max(5, Math.ceil(sdMax)), label: "σₖ" },
+    series: [
+      { type: "line", pts: [[100, Math.sqrt(mean)], [100000, Math.sqrt(mean)]], color: "muted", dash: true, width: 1.4 },
+      { type: "line", pts: pts(growth.er, s => s.sd), color: "poisson" }, { type: "dots", pts: pts(growth.er, s => s.sd), color: "poisson", r: 3.5 },
+      { type: "line", pts: pts(growth.ba, s => s.sd), color: "power" }, { type: "dots", pts: pts(growth.ba, s => s.sd), color: "power", r: 3.5 }
+    ]
+  });
+  const ref = [[100, m * 10], [100000, m * Math.sqrt(100000)]];
+  plot($("kmaxCv"), {
+    x: xs, y: { log: true, min: 1, max: 10000, label: "largest degree" },
+    series: [
+      { type: "line", pts: ref, color: "muted", dash: true, width: 1.4 },
+      { type: "line", pts: pts(growth.er, s => s.max), color: "poisson" }, { type: "dots", pts: pts(growth.er, s => s.max), color: "poisson", r: 3.5 },
+      { type: "line", pts: pts(growth.ba, s => s.max), color: "power" }, { type: "dots", pts: pts(growth.ba, s => s.max), color: "power", r: 3.5 }
+    ]
+  });
+}
+
+/* ---------- robustness ---------- */
+function giantCurve(g, order){
+  const N = g.N, parent = new Int32Array(N), size = new Int32Array(N), on = new Uint8Array(N), res = new Float32Array(N + 1);
+  const find = a => { while (parent[a] !== a){ parent[a] = parent[parent[a]]; a = parent[a]; } return a; };
+  let largest = 0;
+  for (let i = N - 1; i >= 0; i--){
+    const v = order[i]; on[v] = 1; parent[v] = v; size[v] = 1;
+    for (let p = g.off[v]; p < g.off[v + 1]; p++){
+      const u = g.nbr[p]; if (!on[u]) continue;
+      let a = find(v), b = find(u);
+      if (a !== b){ if (size[a] < size[b]){ const t = a; a = b; b = t; } parent[b] = a; size[a] += size[b]; }
+    }
+    const s = size[find(v)]; if (s > largest) largest = s;
+    res[i] = largest / N;
+  }
+  return res;
+}
+function shuffled(N){ const a = Int32Array.from({ length: N }, (_, i) => i); for (let i = N - 1; i > 0; i--){ const j = rnd(i + 1); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function byDegree(g){ return Int32Array.from(shuffled(g.N)).sort((a, b) => g.deg[b] - g.deg[a]); }
+let robust = null;
+function runRobust(){
+  const N = 10000, ba = genBA(N, mVal()), er = genER(N, stats(ba).mean);
+  const curve = (g, order) => { const r = giantCurve(g, order), out = []; for (let i = 0; i < N; i += 40) out.push([i / N, r[i] * N / (N - i)]); return out; };
+  robust = {
+    erF: curve(er, shuffled(N)), erA: curve(er, byDegree(er)),
+    baF: curve(ba, shuffled(N)), baA: curve(ba, byDegree(ba))
+  };
+  drawRobust();
+}
+function drawRobust(){
+  if (!robust) return;
+  plot($("robCv"), {
+    x: { min: 0, max: 1, label: "fraction of nodes removed", fmt: v => Math.round(v * 100) + "%" },
+    y: { min: 0, max: 1, label: "survivors still connected", fmt: v => Math.round(v * 100) + "%" },
+    series: [
+      { type: "line", pts: robust.erF, color: "poisson" }, { type: "line", pts: robust.erA, color: "poisson", dash: true },
+      { type: "line", pts: robust.baF, color: "power" }, { type: "line", pts: robust.baA, color: "power", dash: true }
+    ]
+  });
+}
+$("robRun").addEventListener("click", runRobust);
+
+/* ---------- path lengths ---------- */
+function avgDist(g, samples){
+  const N = g.N, dist = new Int32Array(N), q = new Int32Array(N);
+  let tot = 0, cnt = 0;
+  // pick sources from the largest component (start from the highest-degree node's component)
+  let hub = 0; for (let i = 1; i < N; i++) if (g.deg[i] > g.deg[hub]) hub = i;
+  dist.fill(-1); let h = 0, t = 0; q[t++] = hub; dist[hub] = 0;
+  while (h < t){ const v = q[h++]; for (let p = g.off[v]; p < g.off[v + 1]; p++){ const u = g.nbr[p]; if (dist[u] < 0){ dist[u] = dist[v] + 1; q[t++] = u; } } }
+  const comp = q.slice(0, t);
+  for (let s = 0; s < samples; s++){
+    const src = comp[rnd(comp.length)];
+    dist.fill(-1); h = 0; t = 0; q[t++] = src; dist[src] = 0;
+    while (h < t){ const v = q[h++]; for (let p = g.off[v]; p < g.off[v + 1]; p++){ const u = g.nbr[p]; if (dist[u] < 0){ dist[u] = dist[v] + 1; q[t++] = u; tot += dist[u]; cnt++; } } }
+  }
+  return tot / cnt;
+}
+let paths = null, pathToken = 0;
+async function runPaths(){
+  const tok = ++pathToken, m = Math.max(2, mVal()), Ns = [100, 300, 1000, 3000, 10000, 30000];
+  paths = { er: [], ba: [] };
+  for (const N of Ns){
+    $("pathStatus").textContent = `Measuring N = ${N.toLocaleString("en-US")}…`;
+    await pause(); if (tok !== pathToken) return;
+    const ba = genBA(N, m), er = genER(N, stats(ba).mean);
+    paths.ba.push([N, avgDist(ba, 24)]); paths.er.push([N, avgDist(er, 24)]);
+    drawPaths();
+  }
+  $("pathStatus").textContent = mVal() === 1 ? "Uses ⟨k⟩ = 4 here, since ⟨k⟩ = 2 random networks fall apart." : "Average over 24 sampled starting nodes per network";
+}
+function drawPaths(){
+  if (!paths || !paths.ba.length) return;
+  const ymax = Math.ceil(Math.max(...paths.er.map(p => p[1]), ...paths.ba.map(p => p[1])) + 1);
+  plot($("pathCv"), {
+    x: { log: true, min: 100, max: 30000, label: "network size N" }, y: { min: 0, max: ymax, label: "average distance ⟨d⟩" },
+    series: [
+      { type: "line", pts: paths.er, color: "poisson" }, { type: "dots", pts: paths.er, color: "poisson", r: 3.5 },
+      { type: "line", pts: paths.ba, color: "power" }, { type: "dots", pts: paths.ba, color: "power", r: 3.5 }
+    ]
+  });
+}
+$("pathRun").addEventListener("click", runPaths);
+
+/* ---------- redraw on resize / theme change ---------- */
+function redrawAll(){ readColors(); viewER.draw(); viewBA.draw(); drawDist(); drawRatio(); drawPick(); drawGrowth(); drawRobust(); drawPaths(); }
+let rT = 0;
+new ResizeObserver(() => { clearTimeout(rT); rT = setTimeout(redrawAll, 60); }).observe(document.body);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redrawAll);
+new MutationObserver(redrawAll).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+if (document.fonts) document.fonts.ready.then(redrawAll);
+
+/* ---------- start ---------- */
+regenHero();
+regenDist();
+drawRatio();
+doPick();
+const lazy = [[$("noscale"), runGrowth], [$("practice"), () => { runRobust(); runPaths(); }]];
+const io = new IntersectionObserver(entries => {
+  entries.forEach(en => {
+    if (!en.isIntersecting) return;
+    const item = lazy.find(l => l[0] === en.target);
+    if (item && !item.done){ item.done = true; item[1](); io.unobserve(en.target); }
+  });
+}, { rootMargin: "200px" });
+lazy.forEach(l => io.observe(l[0]));
+})();
+</script>
+</body>
+</html>
