@@ -7,6 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 <style>
 :root{
   --paper:#EDF2F5; --sheet:#F9FBFC; --ink:#1B2A3A; --muted:#566676; --grid:#D2DDE5; --grid-minor:#E3EAF0;
@@ -74,7 +77,7 @@ button{
 button:hover{background:var(--power)}
 button:focus-visible, input:focus-visible, select:focus-visible{outline:3px solid var(--focus); outline-offset:2px}
 .legend{display:flex; flex-wrap:wrap; gap:6px 18px; font-size:14px; color:var(--muted); margin:6px 0 0}
-.legend span{display:inline-flex; align-items:center; gap:6px}
+.legend > span{display:inline-flex; align-items:center; gap:6px}
 .line-key{display:inline-block; width:22px; height:0; border-top:3px solid currentColor}
 .line-key.dash{border-top-style:dashed}
 .callout{font-family:var(--display); font-size:21px; line-height:1.4; margin:14px 0 4px; max-width:40ch}
@@ -83,7 +86,8 @@ button:focus-visible, input:focus-visible, select:focus-visible{outline:3px soli
 .chip{border:1.5px solid var(--grid); border-radius:999px; padding:3px 12px; font-size:14px; font-variant-numeric:tabular-nums}
 .chip.inf{border-color:var(--hub); color:var(--hub)}
 .chip.fin{border-color:var(--poisson); color:var(--poisson)}
-.formula{font-family:"Times New Roman",Times,serif; font-style:italic; font-size:19px; white-space:nowrap}
+.katex{font-size:1.08em}
+.callout .katex, .legend .katex, .chip .katex, .stats .katex, .status .katex, .ctl .katex, h3 .katex, footer .katex{font-size:1em}
 .tip{position:fixed; pointer-events:none; background:var(--ink); color:var(--sheet); font-size:13px; padding:3px 8px; border-radius:4px; opacity:0; transition:opacity .1s; z-index:5}
 footer{padding:48px 0 64px; font-size:14px; color:var(--muted)}
 footer p{max-width:80ch}
@@ -112,7 +116,7 @@ button.theme-btn svg{width:20px; height:20px; fill:none; stroke:currentColor; st
   <div class="controls">
     <label class="ctl">Nodes <output id="nOut">220</output>
       <input type="range" id="nIn" min="60" max="400" step="10" value="220"></label>
-    <label class="ctl">Average degree ⟨k⟩ <output id="mOut">4</output>
+    <label class="ctl"><span>Average degree \(\langle k\rangle\)</span> <output id="mOut">4</output>
       <input type="range" id="mIn" min="1" max="4" step="1" value="2"></label>
     <button id="regen" type="button">Regenerate</button>
   </div>
@@ -133,7 +137,7 @@ button.theme-btn svg{width:20px; height:20px; fill:none; stroke:currentColor; st
   </div>
   <div class="legend" style="margin-top:12px">
     <span>Dot size grows with degree.</span>
-    <span><span class="swatch" style="background:var(--hub)"></span>Hub: at least 3 × ⟨k⟩ links</span>
+    <span><span class="swatch" style="background:var(--hub)"></span>Hub: at least \(3\langle k\rangle\) links</span>
     <span>Hover or tap a node to see its neighbors.</span>
   </div>
 </header>
@@ -142,7 +146,7 @@ button.theme-btn svg{width:20px; height:20px; fill:none; stroke:currentColor; st
 
 <section id="dist">
   <h2>Poisson vs power law</h2>
-  <p>The same comparison with many more nodes. On linear axes the power law is a steep L with a long tail. On log–log axes it becomes a straight line, because taking logs of <span class="formula">P(k) = c k<sup>−γ</sup></span> gives <span class="formula">log P(k) = log c − γ log k</span>: a line with slope −γ, the degree exponent.</p>
+  <p>The same comparison with many more nodes. On linear axes the power law is a steep L with a long tail. On log–log axes it becomes a straight line, because taking logs of \(P(k) = c\,k^{-\gamma}\) gives \(\log P(k) = \log c - \gamma \log k\): a line with slope \(-\gamma\), the degree exponent.</p>
   <div class="controls">
     <label class="ctl">Nodes
       <select id="distN"><option value="2000">2,000</option><option value="10000" selected>10,000</option><option value="50000">50,000</option></select></label>
@@ -161,7 +165,7 @@ button.theme-btn svg{width:20px; height:20px; fill:none; stroke:currentColor; st
   </div>
   <div class="legend">
     <span style="color:var(--poisson)"><span class="swatch" style="background:var(--poisson)"></span>Random network</span>
-    <span style="color:var(--poisson)"><span class="line-key dash"></span>Poisson with the same ⟨k⟩</span>
+    <span style="color:var(--poisson)"><span class="line-key dash"></span>Poisson with the same \(\langle k\rangle\)</span>
     <span style="color:var(--power)"><span class="swatch" style="background:var(--power)"></span>Scale-free network</span>
     <span style="color:var(--hub)"><span class="line-key"></span>Fitted power law</span>
   </div>
@@ -170,31 +174,31 @@ button.theme-btn svg{width:20px; height:20px; fill:none; stroke:currentColor; st
 
 <section id="scale">
   <h2>What “scale-free” means</h2>
-  <p>Compare the number of nodes with <i>bk</i> links to the number with <i>k</i> links. For a power law the ratio is always <span class="formula">b<sup>−γ</sup></span>, whatever <i>k</i> you start from: it depends only on how many times larger you look. No degree is special, so there is no characteristic scale. For a Poisson distribution the ratio depends heavily on <i>k</i> and collapses once <i>k</i> passes ⟨k⟩.</p>
+  <p>Compare the number of nodes with \(bk\) links to the number with \(k\) links. For a power law the ratio \(P(bk)/P(k)\) is always \(b^{-\gamma}\), whatever \(k\) you start from: it depends only on how many times larger you look. No degree is special, so there is no characteristic scale. For a Poisson distribution the ratio depends heavily on \(k\) and collapses once \(k\) passes \(\langle k\rangle\).</p>
   <div class="controls">
-    <label class="ctl">Degree exponent γ <output id="gOut">2.5</output>
+    <label class="ctl"><span>Degree exponent \(\gamma\)</span> <output id="gOut">2.5</output>
       <input type="range" id="gIn" min="1.5" max="4" step="0.1" value="2.5"></label>
-    <label class="ctl">Compare k with
+    <label class="ctl"><span>Compare \(k\) with</span>
       <select id="bIn"><option value="2" selected>2k</option><option value="3">3k</option><option value="10">10k</option></select></label>
-    <label class="ctl">Starting degree k <output id="kOut">5</output>
+    <label class="ctl"><span>Starting degree \(k\)</span> <output id="kOut">5</output>
       <input type="range" id="kIn" min="0" max="3" step="0.01" value="0.699"></label>
   </div>
   <div class="sheet">
     <canvas id="ratioCv" class="chart wide" aria-label="Ratio P(bk)/P(k) against k"></canvas>
     <div class="legend">
-      <span style="color:var(--power)"><span class="line-key"></span>Power law P(k) ∝ k<sup>−γ</sup></span>
-      <span style="color:var(--poisson)"><span class="line-key"></span>Poisson, ⟨k⟩ = 10</span>
-      <span style="color:var(--hub)"><span class="swatch" style="background:var(--hub)"></span>Your starting k</span>
+      <span style="color:var(--power)"><span class="line-key"></span>Power law \(P(k) \propto k^{-\gamma}\)</span>
+      <span style="color:var(--poisson)"><span class="line-key"></span>Poisson, \(\langle k\rangle = 10\)</span>
+      <span style="color:var(--hub)"><span class="swatch" style="background:var(--hub)"></span>Your starting \(k\)</span>
     </div>
   </div>
   <p class="callout" id="ratioText"></p>
-  <p style="margin-top:18px">The same exponent decides which averages exist. With a power-law tail, the n-th moment <span class="formula">⟨k<sup>n</sup>⟩ ∝ ∫ k<sup>n−γ</sup> dk</span> diverges when γ ≤ n + 1. Most real networks have 2 &lt; γ &lt; 3: a finite mean, but an infinite variance.</p>
+  <p style="margin-top:18px">The same exponent decides which averages exist. With a power-law tail, the \(n\)th moment \(\langle k^n\rangle \propto \int k^{\,n-\gamma}\,\mathrm{d}k\) diverges when \(\gamma \le n + 1\). Most real networks have \(2 < \gamma < 3\): a finite mean, but an infinite variance.</p>
   <div class="chips" id="moments"></div>
 </section>
 
 <section id="noscale">
   <h2>No typical degree</h2>
-  <p>For a random network, a node you pick at random has roughly k = ⟨k⟩ ± √⟨k⟩, so ⟨k⟩ is a fair summary. For a scale-free network with γ &lt; 3, ⟨k⟩ stays fixed as the network grows but the spread σ<sub>k</sub> keeps growing, and so does the largest hub. Knowing ⟨k⟩ tells you little about the node you will pick.</p>
+  <p>For a random network, a node you pick at random has roughly \(k \approx \langle k\rangle \pm \sqrt{\langle k\rangle}\), so \(\langle k\rangle\) is a fair summary. For a scale-free network with \(\gamma < 3\), \(\langle k\rangle\) stays fixed as the network grows but the spread \(\sigma_k\) keeps growing, and so does the largest hub. Knowing \(\langle k\rangle\) tells you little about the node you will pick.</p>
   <div class="controls">
     <button id="pick" type="button">Pick 100 random nodes</button>
     <span class="status" id="pickText"></span>
@@ -204,18 +208,18 @@ button.theme-btn svg{width:20px; height:20px; fill:none; stroke:currentColor; st
   </div>
   <div class="two" style="margin-top:18px">
     <div class="sheet">
-      <h3>Spread σ<sub>k</sub> as N grows</h3>
+      <h3>Spread \(\sigma_k\) as \(N\) grows</h3>
       <canvas id="sigCv" class="chart" aria-label="Standard deviation of degree versus network size"></canvas>
     </div>
     <div class="sheet">
-      <h3>Largest hub as N grows</h3>
+      <h3>Largest hub as \(N\) grows</h3>
       <canvas id="kmaxCv" class="chart" aria-label="Maximum degree versus network size"></canvas>
     </div>
   </div>
   <div class="legend">
     <span style="color:var(--poisson)"><span class="line-key"></span>Random network</span>
     <span style="color:var(--power)"><span class="line-key"></span>Scale-free network</span>
-    <span style="color:var(--muted)"><span class="line-key dash"></span>√⟨k⟩ (left) and √N growth (right)</span>
+    <span style="color:var(--muted)"><span class="line-key dash"></span>\(\sqrt{\langle k\rangle}\) (left) and \(\sqrt{N}\) growth (right)</span>
   </div>
   <p class="status" id="growStatus"></p>
 </section>
@@ -225,7 +229,7 @@ button.theme-btn svg{width:20px; height:20px; fill:none; stroke:currentColor; st
   <div class="two">
     <div>
       <h3>Robust to accidents, fragile to attacks</h3>
-      <p>Remove nodes and ask what share of the surviving nodes can still reach each other. A random network falls apart once about 1 − 1/⟨k⟩ of its nodes fail. A scale-free network holds on longer and fades out gradually instead of collapsing at a sharp threshold, because almost every node a random failure hits is small. In the limit of very large networks it never breaks apart at all. Remove the hubs first, though, and it shatters faster than the random network.</p>
+      <p>Remove nodes and ask what share of the surviving nodes can still reach each other. A random network falls apart once about \(1 - 1/\langle k\rangle\) of its nodes fail. A scale-free network holds on longer and fades out gradually instead of collapsing at a sharp threshold, because almost every node a random failure hits is small. In the limit of very large networks it never breaks apart at all. Remove the hubs first, though, and it shatters faster than the random network.</p>
       <div class="sheet">
         <canvas id="robCv" class="chart" aria-label="Largest component size versus fraction of nodes removed"></canvas>
         <div class="legend">
@@ -235,11 +239,11 @@ button.theme-btn svg{width:20px; height:20px; fill:none; stroke:currentColor; st
           <span style="color:var(--power)"><span class="line-key dash"></span>Scale-free, hub attack</span>
         </div>
       </div>
-      <div class="controls"><button id="robRun" type="button">Run again</button><span class="status">10,000 nodes, ⟨k⟩ from the slider at the top</span></div>
+      <div class="controls"><button id="robRun" type="button">Run again</button><span class="status">10,000 nodes, \(\langle k\rangle\) from the slider at the top</span></div>
     </div>
     <div>
       <h3>An even smaller world</h3>
-      <p>Hubs act as shortcuts. Paths between two nodes tend to pass through them, so the average distance grows more slowly with network size than in a random network with the same ⟨k⟩.</p>
+      <p>Hubs act as shortcuts. Paths between two nodes tend to pass through them, so the average distance grows more slowly with network size than in a random network with the same \(\langle k\rangle\).</p>
       <div class="sheet">
         <canvas id="pathCv" class="chart" aria-label="Average distance versus network size"></canvas>
         <div class="legend">
@@ -257,7 +261,7 @@ button.theme-btn svg{width:20px; height:20px; fill:none; stroke:currentColor; st
 
 <footer class="wrap">
   <p>Created by Claude Opus 5.5, based on the lecture slides by Sang Hoon Lee.</p>
-  <p>Every network on this page is generated in your browser. Random networks use the G(N, M) model with M = N⟨k⟩/2 links. Scale-free networks use Barabási–Albert preferential attachment, which gives γ = 3 for large N. Moments in the “scale-free” section use an ideal continuous power law.</p>
+  <p>Every network on this page is generated in your browser. Random networks use the \(G(N, M)\) model with \(M = N\langle k\rangle/2\) links. Scale-free networks use Barabási–Albert preferential attachment, which gives \(\gamma = 3\) for large \(N\). Moments in the “scale-free” section use an ideal continuous power law.</p>
 </footer>
 
 <script>
@@ -361,6 +365,16 @@ function makeAxis(a, p0, p1){
   f.minor = minor; f.min = a.min; f.max = a.max;
   return f;
 }
+const MATH_OPTS = { delimiters: [{ left: "\\(", right: "\\)", display: false }], throwOnError: false };
+function setMath(el, html){ el.innerHTML = html; if (window.renderMathInElement) renderMathInElement(el, MATH_OPTS); }
+// canvas text: *starred* parts are math symbols, set in math italic; the rest stays upright
+function richText(ctx, s, x, y, align = "center", size = 13){
+  const body = getComputedStyle(document.body).fontFamily;
+  const parts = s.split("*").map((t, i) => ({ t, f: i % 2 ? `italic ${size + 2}px KaTeX_Math, "Times New Roman", serif` : `${size}px ${body}` }));
+  let W = 0; parts.forEach(p => { ctx.font = p.f; p.w = ctx.measureText(p.t).width; W += p.w; });
+  let cx = align === "center" ? x - W / 2 : x; ctx.textAlign = "left";
+  parts.forEach(p => { ctx.font = p.f; ctx.fillText(p.t, cx, y); cx += p.w; });
+}
 function plot(cv, o){
   const { ctx, w, h } = setup(cv);
   const pad = { l: 56, r: 24, t: 12, b: o.x.label ? 46 : 28 };
@@ -381,9 +395,9 @@ function plot(cv, o){
   if (!o.x.hideTicks) X.major.forEach(v => ctx.fillText(X.fmt(v), X(v), h - pad.b + 6));
   ctx.textAlign = "right"; ctx.textBaseline = "middle";
   if (!o.y.hideTicks) Y.major.forEach(v => ctx.fillText(Y.fmt(v), pad.l - 6, Y(v)));
-  ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.font = "italic 14px 'Times New Roman', serif"; ctx.fillStyle = C.ink;
-  if (o.x.label) ctx.fillText(o.x.label, (pad.l + w - pad.r) / 2, h - 4);
-  if (o.y.label){ ctx.save(); ctx.translate(14, (pad.t + h - pad.b) / 2); ctx.rotate(-Math.PI / 2); ctx.textBaseline = "middle"; ctx.fillText(o.y.label, 0, 0); ctx.restore(); }
+  ctx.textBaseline = "bottom"; ctx.fillStyle = C.ink;
+  if (o.x.label) richText(ctx, o.x.label, (pad.l + w - pad.r) / 2, h - 4, "center", 14);
+  if (o.y.label){ ctx.save(); ctx.translate(14, (pad.t + h - pad.b) / 2); ctx.rotate(-Math.PI / 2); ctx.textBaseline = "middle"; richText(ctx, o.y.label, 0, 0, "center", 14); ctx.restore(); }
   ctx.save();
   ctx.beginPath(); ctx.rect(pad.l, pad.t, w - pad.l - pad.r, h - pad.t - pad.b); ctx.clip();
   const ok = (x, y) => isFinite(x) && isFinite(y) && (!o.x.log || x > 0) && (!o.y.log || y > 0);
@@ -442,7 +456,7 @@ class NetView{
     this.alpha = 1;
     const s = stats(g); this.mean = s.mean;
     let hubs = 0; for (let i = 0; i < N; i++) if (g.deg[i] >= 3 * s.mean) hubs++;
-    this.statEl.innerHTML = `<div><b>${s.mean.toFixed(2)}</b>⟨k⟩</div><div><b>${s.sd.toFixed(2)}</b>σ<sub>k</sub></div><div><b>${s.max}</b>largest k</div><div><b>${hubs}</b>hubs</div>`;
+    setMath(this.statEl, `<div><b>${s.mean.toFixed(2)}</b>\\(\\langle k\\rangle\\)</div><div><b>${s.sd.toFixed(2)}</b>\\(\\sigma_k\\)</div><div><b>${s.max}</b>largest \\(k\\)</div><div><b>${hubs}</b>hubs</div>`);
     if (reduceMotion){ while (this.alpha > 0.02) this.tick(); this.draw(); }
     else this.loop();
   }
@@ -567,7 +581,7 @@ function drawDist(){
   const powl = []; for (let k = fit.kmin; k <= sb.max * 1.2; k *= 1.1) powl.push([k, fit.C * Math.pow(k, -fit.gam)]);
   const ymaxLin = Math.max(...hb.map(p => p[1]), ...he.map(p => p[1])) * 1.1;
   plot($("distLin"), {
-    x: { min: 0, max: kmaxLin, label: "k" }, y: { min: 0, max: ymaxLin, label: "P(k)", fmt: v => v.toFixed(2) },
+    x: { min: 0, max: kmaxLin, label: "*k*" }, y: { min: 0, max: ymaxLin, label: "*P*(*k*)", fmt: v => v.toFixed(2) },
     series: [
       { type: "line", pts: pois.filter(p => p[0] <= kmaxLin), color: "poisson", dash: true, width: 1.6 },
       { type: "dots", pts: he, color: "poisson", r: 3.6, shape: "diamond" },
@@ -577,7 +591,7 @@ function drawDist(){
   const shown = (useBin ? dist.lb.concat(dist.le) : hb).map(p => p[1]).filter(v => v > 0);
   const ymin = Math.pow(10, Math.floor(Math.log10(Math.min(...shown) / 2)));
   plot($("distLog"), {
-    x: { log: true, min: 1, max: Math.pow(10, Math.ceil(Math.log10(sb.max * 1.1))), label: "k" }, y: { log: true, min: ymin, max: 1, label: "P(k)" },
+    x: { log: true, min: 1, max: Math.pow(10, Math.ceil(Math.log10(sb.max * 1.1))), label: "*k*" }, y: { log: true, min: ymin, max: 1, label: "*P*(*k*)" },
     series: [
       { type: "line", pts: pois.filter(p => p[0] >= 1), color: "poisson", dash: true, width: 1.6 },
       { type: "line", pts: powl, color: "hub", width: 1.8 },
@@ -585,7 +599,7 @@ function drawDist(){
       { type: "dots", pts: useBin ? dist.lb : hb, color: "power", r: useBin ? 4 : 2.4, alpha: useBin ? 1 : .8 }
     ]
   });
-  $("fitText").innerHTML = `Fitted degree exponent γ ≈ <span class="num">${fit.gam.toFixed(2)}</span>. The random network’s points fall off a cliff near k ≈ ${Math.round(mean * 2.5)}; the scale-free network keeps going for about ${Math.log10(sb.max / Math.max(1, mVal())).toFixed(1)} decades, up to k = ${sb.max}.`;
+  setMath($("fitText"), `Fitted degree exponent \\(\\gamma \\approx\\) <span class="num">${fit.gam.toFixed(2)}</span>. The random network’s points fall off a cliff near \\(k \\approx ${Math.round(mean * 2.5)}\\); the scale-free network keeps going for about ${Math.log10(sb.max / Math.max(1, mVal())).toFixed(1)} decades, up to \\(k = ${sb.max}\\).`);
 }
 $("distN").addEventListener("change", regenDist);
 $("logbin").addEventListener("change", drawDist);
@@ -605,7 +619,7 @@ function drawRatio(){
   }
   const plR = Math.pow(b, -gam);
   plot($("ratioCv"), {
-    x: { log: true, min: 1, max: 1000, label: "k" }, y: { log: true, min: 1e-12, max: 100, label: "P(bk) / P(k)" },
+    x: { log: true, min: 1, max: 1000, label: "*k*" }, y: { log: true, min: 1e-12, max: 100, label: "*P*(*bk*) / *P*(*k*)" },
     series: [
       { type: "line", pts: po, color: "poisson", width: 2.4 },
       { type: "line", pts: pl, color: "power", width: 3 }
@@ -618,14 +632,14 @@ function drawRatio(){
   });
   const kStr = k0 < 10 ? k0.toFixed(1) : String(Math.round(k0));
   const bkStr = k0 * b < 10 ? (k0 * b).toFixed(1) : String(Math.round(k0 * b));
-  $("ratioText").innerHTML = `For every node with ${kStr} links there are <span class="num">${plR < 0.01 ? plR.toExponential(1) : plR.toFixed(3)}</span> nodes with ${bkStr} links. Move k anywhere: the power-law ratio stays at 1/${b}<sup>${gam.toFixed(1)}</sup>.`;
+  setMath($("ratioText"), `For every node with ${kStr} links there are <span class="num">${plR < 0.01 ? plR.toExponential(1) : plR.toFixed(3)}</span> nodes with ${bkStr} links. Move \\(k\\) anywhere: the power-law ratio stays at \\(${b}^{-${gam.toFixed(1)}}\\).`);
   const chips = [1, 2, 3].map(n => {
-    const name = n === 1 ? "⟨k⟩" : `⟨k<sup>${n}</sup>⟩`;
+    const name = n === 1 ? "\\(\\langle k\\rangle\\)" : `\\(\\langle k^{${n}}\\rangle\\)`;
     const fin = gam > n + 1;
     return `<span class="chip ${fin ? "fin" : "inf"}">${name} ${fin ? "finite" : "diverges"}</span>`;
   });
-  chips.push(`<span class="chip ${gam > 3 ? "fin" : "inf"}">σ<sub>k</sub> ${gam > 3 ? "finite" : "→ ∞"}</span>`);
-  $("moments").innerHTML = chips.join("");
+  chips.push(`<span class="chip ${gam > 3 ? "fin" : "inf"}">\\(\\sigma_k\\) ${gam > 3 ? "finite" : "\\(\\to \\infty\\)"}</span>`);
+  setMath($("moments"), chips.join(""));
 }
 ["gIn", "bIn", "kIn"].forEach(id => $(id).addEventListener("input", drawRatio));
 
@@ -638,25 +652,25 @@ function doPick(){
   drawPick();
   const sum = a => { const m = a.reduce((x, y) => x + y, 0) / a.length; return { min: Math.min(...a), max: Math.max(...a) }; };
   const e = sum(picks.er), b = sum(picks.ba);
-  $("pickText").textContent = `Random: k from ${e.min} to ${e.max}. Scale-free: k from ${b.min} to ${b.max}.`;
+  setMath($("pickText"), `Random: \\(k\\) from ${e.min} to ${e.max}. Scale-free: \\(k\\) from ${b.min} to ${b.max}.`);
 }
 function drawPick(){
   if (!picks || !dist) return;
   const kmax = Math.max(dist.sb.max, ...picks.ba);
   const jit = a => a.map(k => [k, 0]);
   plot($("pickCv"), {
-    x: { log: true, min: 1, max: Math.pow(10, Math.ceil(Math.log10(kmax))), label: "degree k of each picked node" }, y: { min: 0, max: 3, hideTicks: true },
+    x: { log: true, min: 1, max: Math.pow(10, Math.ceil(Math.log10(kmax))), label: "degree *k* of each picked node" }, y: { min: 0, max: 3, hideTicks: true },
     series: [],
     after: (ctx, X, Y) => {
       const row = (arr, yv, col, lab) => {
-        ctx.fillStyle = C.muted; ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.font = "13px " + getComputedStyle(document.body).fontFamily;
-        ctx.fillText(lab, X(1) + 4, Y(yv) - 12);
+        ctx.fillStyle = C.muted; ctx.textBaseline = "bottom";
+        richText(ctx, lab, X(1) + 4, Y(yv) - 12, "left");
         ctx.fillStyle = C[col]; ctx.globalAlpha = .55;
         arr.forEach(k => { ctx.beginPath(); ctx.arc(X(Math.max(1, k)) + (Math.random() - .5) * 3, Y(yv) + (Math.random() - .5) * 10, 5, 0, 7); ctx.fill(); });
         ctx.globalAlpha = 1;
       };
-      row(picks.er, 2, "poisson", `Random: ⟨k⟩ ± σ = ${dist.se.mean.toFixed(1)} ± ${dist.se.sd.toFixed(1)}`);
-      row(picks.ba, 0.85, "power", `Scale-free: ⟨k⟩ ± σ = ${dist.sb.mean.toFixed(1)} ± ${dist.sb.sd.toFixed(1)}`);
+      row(picks.er, 2, "poisson", `Random: ⟨*k*⟩ ± *σ* = ${dist.se.mean.toFixed(1)} ± ${dist.se.sd.toFixed(1)}`);
+      row(picks.ba, 0.85, "power", `Scale-free: ⟨*k*⟩ ± *σ* = ${dist.sb.mean.toFixed(1)} ± ${dist.sb.sd.toFixed(1)}`);
     }
   });
 }
@@ -669,7 +683,7 @@ async function runGrowth(){
   const tok = ++growToken, m = mVal(), Ns = [100, 300, 1000, 3000, 10000, 30000, 100000];
   growth = { Ns: [], er: [], ba: [] };
   for (const N of Ns){
-    $("growStatus").textContent = `Growing networks up to N = ${N.toLocaleString("en-US")}…`;
+    setMath($("growStatus"), `Growing networks up to \\(N = ${N.toLocaleString("en-US").replace(/,/g, "{,}")}\\)…`);
     await pause(); if (tok !== growToken) return;
     const ba = genBA(N, m), sb = stats(ba), se = stats(genER(N, sb.mean));
     growth.Ns.push(N); growth.ba.push(sb); growth.er.push(se);
@@ -680,11 +694,11 @@ async function runGrowth(){
 function drawGrowth(){
   if (!growth || !growth.Ns.length) return;
   const m = mVal(), mean = 2 * m;
-  const xs = { log: true, min: 100, max: 100000, label: "network size N" };
+  const xs = { log: true, min: 100, max: 100000, label: "network size *N*" };
   const pts = (arr, f) => growth.Ns.map((N, i) => [N, f(arr[i])]);
   const sdMax = Math.max(...growth.ba.map(s => s.sd)) * 1.15;
   plot($("sigCv"), {
-    x: xs, y: { min: 0, max: Math.max(5, Math.ceil(sdMax)), label: "σₖ" },
+    x: xs, y: { min: 0, max: Math.max(5, Math.ceil(sdMax)), label: "*σ*ₖ" },
     series: [
       { type: "line", pts: [[100, Math.sqrt(mean)], [100000, Math.sqrt(mean)]], color: "muted", dash: true, width: 1.4 },
       { type: "line", pts: pts(growth.er, s => s.sd), color: "poisson" }, { type: "dots", pts: pts(growth.er, s => s.sd), color: "poisson", r: 3.5 },
@@ -765,19 +779,19 @@ async function runPaths(){
   const tok = ++pathToken, m = Math.max(2, mVal()), Ns = [100, 300, 1000, 3000, 10000, 30000];
   paths = { er: [], ba: [] };
   for (const N of Ns){
-    $("pathStatus").textContent = `Measuring N = ${N.toLocaleString("en-US")}…`;
+    setMath($("pathStatus"), `Measuring \\(N = ${N.toLocaleString("en-US").replace(/,/g, "{,}")}\\)…`);
     await pause(); if (tok !== pathToken) return;
     const ba = genBA(N, m), er = genER(N, stats(ba).mean);
     paths.ba.push([N, avgDist(ba, 24)]); paths.er.push([N, avgDist(er, 24)]);
     drawPaths();
   }
-  $("pathStatus").textContent = mVal() === 1 ? "Uses ⟨k⟩ = 4 here, since ⟨k⟩ = 2 random networks fall apart." : "Average over 24 sampled starting nodes per network";
+  setMath($("pathStatus"), mVal() === 1 ? "Uses \\(\\langle k\\rangle = 4\\) here, since random networks with \\(\\langle k\\rangle = 2\\) fall apart." : "Average over 24 sampled starting nodes per network");
 }
 function drawPaths(){
   if (!paths || !paths.ba.length) return;
   const ymax = Math.ceil(Math.max(...paths.er.map(p => p[1]), ...paths.ba.map(p => p[1])) + 1);
   plot($("pathCv"), {
-    x: { log: true, min: 100, max: 30000, label: "network size N" }, y: { min: 0, max: ymax, label: "average distance ⟨d⟩" },
+    x: { log: true, min: 100, max: 30000, label: "network size *N*" }, y: { min: 0, max: ymax, label: "average distance ⟨*d*⟩" },
     series: [
       { type: "line", pts: paths.er, color: "poisson" }, { type: "dots", pts: paths.er, color: "poisson", r: 3.5 },
       { type: "line", pts: paths.ba, color: "power" }, { type: "dots", pts: paths.ba, color: "power", r: 3.5 }
@@ -792,6 +806,7 @@ let rT = 0;
 new ResizeObserver(() => { clearTimeout(rT); rT = setTimeout(redrawAll, 60); }).observe(document.body);
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redrawAll);
 new MutationObserver(redrawAll).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+if (window.renderMathInElement) renderMathInElement(document.body, MATH_OPTS);
 if (document.fonts) document.fonts.ready.then(redrawAll);
 
 /* ---------- start ---------- */
