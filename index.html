@@ -92,6 +92,9 @@ button:focus-visible, input:focus-visible, select:focus-visible{outline:3px soli
 footer{padding:48px 0 64px; font-size:14px; color:var(--muted)}
 footer p{max-width:80ch}
 .status{font-size:13px; color:var(--muted); min-height:1.4em}
+.related{margin-top:32px; border-left:4px solid var(--power)}
+.related p{margin-bottom:.6em}
+.related a{color:var(--focus); font-weight:600; text-underline-offset:3px}
 @media (prefers-reduced-motion: reduce){ .tip{transition:none} }
 </style>
 <script>try { const t = localStorage.getItem("netsci-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}</script>
@@ -265,6 +268,12 @@ h1.course-title{margin-top:48px !important}
   </div>
   <h3 style="margin-top:28px">Where power laws show up</h3>
   <p>Heavy-tailed degree distributions appear across very different systems: links between web pages, routers on the internet, protein interactions, email, citations between papers, metabolic reactions. This shared shape is what network scientists call universality. It is also why studying one kind of network often teaches you something about the others.</p>
+  <div class="sheet related">
+    <h3>Go further: a special lecture on power laws</h3>
+    <p>For a deeper look at this topic, see the demos from Sang Hoon Lee&rsquo;s lecture &ldquo;Power Laws and Scale-Free Networks&rdquo; at the <a href="https://www.complexity.kr/?p=1268">2024 Complexity Summer School</a>. They cover the discrete and continuous forms of the power law, the size of the largest hub, how to plot a degree distribution and fit its exponent (and the debate over whether scale-free networks are rare), and how to build networks with a given degree sequence.</p>
+    <p class="note" lang="ko">더 깊이 공부하고 싶다면, 이상훈 교수의 2024 복잡계 여름학교 특강 「거듭제곱 법칙과 척도 없는 네트워크」 데모를 함께 보세요.</p>
+    <p style="margin:0"><a href="https://lshlj82.github.io/netsci-summer-school/">Open the lecture demos →</a></p>
+  </div>
 </section>
 </main>
 

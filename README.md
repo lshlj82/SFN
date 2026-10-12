@@ -29,6 +29,11 @@ Open `index.html` in any modern browser. To host it with GitHub Pages, push this
 - **Average distances** come from breadth-first searches started at 24 randomly sampled nodes in the largest component.
 - **The ratio and moment panels** use an ideal continuous power law.
 
+## Related
+
+- **Course page:** this demo is demo 7 of the [Network Science course demos](https://lshlj82.github.io/netsci-course-GNU/) for the Department of Physics, Gyeongsang National University.
+- **Special lecture:** [Power Laws and Scale-Free Networks](https://lshlj82.github.io/netsci-summer-school/) ([source](https://github.com/lshlj82/netsci-summer-school)), four demos from Sang Hoon Lee's lecture at the [2024 Complexity Summer School](https://www.complexity.kr/?p=1268) that go deeper into this topic.
+
 ## References
 
 - A.-L. Barabási and R. Albert, "Emergence of scaling in random networks," *Science* 286, 509 (1999).
